@@ -1,0 +1,23 @@
+# Environment variables - JANGAN pernah di-commit
+**/.env
+
+# Python
+backend/venv/
+**/__pycache__/
+*.pyc
+
+# Database & vector store
+backend/app.db
+backend/chroma_data/
+backend/uploads/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
