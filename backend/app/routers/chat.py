@@ -1,6 +1,6 @@
 import json
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from app.database import get_session
@@ -18,11 +18,14 @@ def ask_question(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    result = answer_question(
-        question=payload.question,
-        user_id=current_user.id,
-        document_id=payload.document_id,
-    )
+    try:
+        result = answer_question(
+            question=payload.question,
+            user_id=current_user.id,
+            document_id=payload.document_id,
+        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
     # simpan riwayat chat
     history_entry = ChatHistory(
