@@ -13,6 +13,7 @@ from app.schemas import (
     QuizSubmitResponse,
 )
 from app.services.quiz_generation import generate_quiz_questions
+from app.services.study_plan import determine_difficulty
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 
@@ -23,11 +24,15 @@ def generate_quiz(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
+    # FR-12: tentukan tingkat kesulitan otomatis berdasarkan performa user di dokumen ini sebelumnya
+    difficulty = determine_difficulty(current_user.id, payload.document_id, session)
+
     try:
         questions_data = generate_quiz_questions(
             document_id=payload.document_id,
             user_id=current_user.id,
             num_questions=payload.num_questions,
+            difficulty=difficulty,
         )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

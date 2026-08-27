@@ -66,3 +66,8 @@ class QuizSubmitResponse(BaseModel):
     is_correct: bool
     correct_answer: str
     explanation: str | None = None
+
+class StudyPlanItem(BaseModel):
+    topic: str
+    priority: int
+    recommendation: str | None = None   

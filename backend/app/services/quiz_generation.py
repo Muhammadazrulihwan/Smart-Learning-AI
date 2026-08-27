@@ -21,8 +21,12 @@ berdasarkan materi kuliah berikut ini.
 MATERI:
 {context}
 
-Buatkan {num_questions} soal pilihan ganda berdasarkan materi di atas. Soal harus menyebar
-mencakup topik-topik berbeda yang ada di materi, jangan hanya dari satu bagian saja.
+Buatkan {num_questions} soal pilihan ganda berdasarkan materi di atas dengan tingkat kesulitan: {difficulty}.
+- Kalau tingkat kesulitan "mudah": fokus ke definisi dan konsep dasar yang eksplisit disebutkan di materi.
+- Kalau tingkat kesulitan "menengah": campuran definisi dan penerapan konsep sederhana.
+- Kalau tingkat kesulitan "sulit": soal penerapan/analisis yang butuh pemahaman lebih dalam, bukan sekadar hafalan.
+
+Soal harus menyebar mencakup topik-topik berbeda yang ada di materi, jangan hanya dari satu bagian saja.
 
 Balas HANYA dengan JSON array (tanpa teks lain, tanpa markdown code fence), dengan format
 setiap elemen persis seperti ini:
@@ -63,7 +67,12 @@ def _generate_with_retry(prompt: str, max_retries: int = 3) -> str:
     )
 
 
-def generate_quiz_questions(document_id: int, user_id: int, num_questions: int = 5) -> list[dict]:
+def generate_quiz_questions(
+    document_id: int,
+    user_id: int,
+    num_questions: int = 5,
+    difficulty: str = "menengah",
+) -> list[dict]:
     """
     Ambil sample chunk dari dokumen, minta Gemini generate soal, parse hasilnya.
     Mengembalikan list of dict siap disimpan ke tabel Quiz.
@@ -75,7 +84,7 @@ def generate_quiz_questions(document_id: int, user_id: int, num_questions: int =
         raise ValueError("Dokumen belum diproses atau tidak ditemukan. Upload dan proses dokumen dulu.")
 
     context = "\n\n---\n\n".join(c["text"] for c in chunks)
-    prompt = QUIZ_PROMPT_TEMPLATE.format(context=context, num_questions=num_questions)
+    prompt = QUIZ_PROMPT_TEMPLATE.format(context=context, num_questions=num_questions, difficulty=difficulty)
 
     raw_response = _generate_with_retry(prompt)
 
