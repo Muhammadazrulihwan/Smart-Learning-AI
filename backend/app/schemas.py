@@ -43,3 +43,26 @@ class SourceRef(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     sources: list[SourceRef]
+
+class QuizGenerateRequest(BaseModel):
+    document_id: int
+    num_questions: int = 5
+
+
+class QuizQuestionPublic(BaseModel):
+    """Yang dikirim ke user SAAT mengerjakan kuis - tidak ada correct_answer di sini."""
+    id: int
+    topic: str | None = None
+    question_type: str
+    question: str
+    options: list[str] | None = None
+
+
+class QuizSubmitRequest(BaseModel):
+    user_answer: str
+
+
+class QuizSubmitResponse(BaseModel):
+    is_correct: bool
+    correct_answer: str
+    explanation: str | None = None

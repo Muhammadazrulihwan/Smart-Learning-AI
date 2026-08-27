@@ -57,6 +57,23 @@ def query_chunks(
 
     return chunks
 
+def get_document_chunks(document_id: int, user_id: int, limit: int = 15) -> list[dict]:
+    """
+    Ambil sample chunk dari sebuah dokumen TANPA query similarity search.
+    Dipakai untuk quiz generation, di mana kita butuh chunk yang beragam
+    (mewakili banyak topik di dokumen), bukan chunk paling mirip satu query tertentu.
+    """
+    results = _collection.get(
+        where={"$and": [{"user_id": user_id}, {"document_id": document_id}]},
+        limit=limit,
+    )
+
+    chunks = []
+    for text, meta in zip(results.get("documents", []), results.get("metadatas", [])):
+        chunks.append({"text": text, "metadata": meta})
+
+    return chunks
+
 
 def delete_document_chunks(document_id: int) -> None:
     """Hapus semua chunk milik sebuah dokumen (dipakai kalau dokumen dihapus/re-upload)."""
