@@ -1,0 +1,6 @@
+{
+  "name": "StudyAI - Intelligent Learning Companion",
+  "description": "AI-powered document analysis, personalized study plan, smart Q&A with citations, and interactive quiz generator.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
