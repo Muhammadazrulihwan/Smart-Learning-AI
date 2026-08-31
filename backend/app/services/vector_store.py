@@ -37,14 +37,23 @@ def add_chunks(
 def query_chunks(
     query_embedding: list[float],
     user_id: int,
-    document_id: int,
+    document_id: int | None = None,
     top_k: int = 5,
 ) -> list[dict]:
-    """Cari chunk paling relevan untuk sebuah query, dibatasi ke user & dokumen tertentu."""
+    """
+    Cari chunk paling relevan untuk sebuah query.
+    - document_id diisi -> cari HANYA di dokumen itu (mode lama, per-dokumen).
+    - document_id None -> cari lintas SEMUA dokumen milik user ini (mode "chat umum").
+    """
+    if document_id is not None:
+        where_filter = {"$and": [{"user_id": user_id}, {"document_id": document_id}]}
+    else:
+        where_filter = {"user_id": user_id}
+
     results = _collection.query(
         query_embeddings=[query_embedding],
         n_results=top_k,
-        where={"$and": [{"user_id": user_id}, {"document_id": document_id}]},
+        where=where_filter,
     )
 
     chunks = []

@@ -88,7 +88,7 @@ export const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({ document
     setChatError(null);
 
     try {
-      const res = await chatApi.askQuestion(document.id, text.trim());
+      const res = await chatApi.askQuestion(text.trim(), document.id);
       const aiMsg: ChatMessage = { localId: `ai-${Date.now()}`, sender: 'ai', text: res.answer, sources: res.sources };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
@@ -292,22 +292,8 @@ export const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({ document
                               : 'bg-[#33394a] rounded-tr-sm border border-white/10 text-[#dde2f8]'
                           }`}
                         >
-                          <div className="text-sm leading-relaxed whitespace-pre-line">{msg.text}</div>
-                          {msg.sources && msg.sources.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mt-3">
-                              {msg.sources.map((s, i) => (
-                                <span
-                                  key={i}
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#03b5d3]/20 border border-[#4cd7f6]/40"
-                                >
-                                  <span className="material-symbols-outlined text-[#4cd7f6] text-[14px]">find_in_page</span>
-                                  <span className="text-[11px] font-bold text-[#4cd7f6] uppercase tracking-wider">
-                                    {s.source_name}, bagian {s.chunk_index}
-                                  </span>
-                                </span>
-                              ))}
+                          <div className="text-sm leading-relaxed whitespace-pre-line">{msg.text}
                             </div>
-                          )}
                         </div>
                       </div>
                     </div>

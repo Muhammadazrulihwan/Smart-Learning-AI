@@ -31,7 +31,7 @@ class DocumentRead(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    document_id: int
+    document_id: int | None = None  # None = cari jawaban lintas SEMUA dokumen milik user
     question: str
 
 

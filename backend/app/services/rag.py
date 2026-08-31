@@ -17,6 +17,8 @@ GENERATION_MODEL = "gemini-2.5-flash"
 # Instruksi ini yang mencegah halusinasi: model diminta HANYA menjawab dari context.
 SYSTEM_PROMPT = """Kamu adalah asisten belajar yang membantu mahasiswa memahami materi kuliah.
 Jawab pertanyaan HANYA berdasarkan konteks dokumen yang diberikan di bawah ini.
+Konteks bisa berasal dari satu atau beberapa dokumen berbeda - kalau begitu, boleh gabungkan
+informasinya asal tetap akurat dan sebutkan kalau infonya berasal dari materi yang berbeda-beda.
 
 Aturan penting:
 - Jika jawaban tidak ditemukan dalam konteks, katakan dengan jelas bahwa informasi tersebut
@@ -66,9 +68,10 @@ def _generate_with_retry(prompt: str, max_retries: int = 3) -> str:
     )
 
 
-def answer_question(question: str, user_id: int, document_id: int, top_k: int = 5) -> dict:
+def answer_question(question: str, user_id: int, document_id: int | None = None, top_k: int = 5) -> dict:
     """
     Alur RAG lengkap: embed query -> retrieve chunk relevan -> generate jawaban.
+    document_id None -> retrieval dilakukan lintas SEMUA dokumen milik user (mode "chat umum").
     Mengembalikan dict {"answer": str, "sources": list[dict]}.
     """
     query_embedding = embed_query(question)
@@ -76,15 +79,17 @@ def answer_question(question: str, user_id: int, document_id: int, top_k: int = 
         query_embedding=query_embedding,
         user_id=user_id,
         document_id=document_id,
-        top_k=top_k,
+        top_k=top_k if document_id is not None else top_k + 3,  # sedikit lebih banyak untuk mode lintas dokumen
     )
 
     if not relevant_chunks:
-        return {
-            "answer": "Dokumen ini belum diproses atau tidak ditemukan chunk yang relevan. "
-                      "Pastikan dokumen sudah berhasil diupload dan diproses.",
-            "sources": [],
-        }
+        no_context_msg = (
+            "Belum ada dokumen yang diproses untuk dicari jawabannya. Upload dokumen dulu ya."
+            if document_id is None
+            else "Dokumen ini belum diproses atau tidak ditemukan chunk yang relevan. "
+                 "Pastikan dokumen sudah berhasil diupload dan diproses."
+        )
+        return {"answer": no_context_msg, "sources": []}
 
     prompt = _build_prompt(question, relevant_chunks)
     answer_text = _generate_with_retry(prompt)

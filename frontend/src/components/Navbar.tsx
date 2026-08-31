@@ -1,14 +1,29 @@
 import React from 'react';
 import { UserProfile } from '../types';
 
+export type NavView = 'dashboard' | 'chat' | 'study-plan';
+
 interface NavbarProps {
-  currentView: 'dashboard' | 'study-plan';
-  onNavigate: (view: 'dashboard' | 'study-plan') => void;
+  currentView: NavView;
+  onNavigate: (view: NavView) => void;
   user: UserProfile;
   onLogout: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, user, onLogout }) => {
+  const navItem = (view: NavView, label: string) => (
+    <button
+      onClick={() => onNavigate(view)}
+      className={`font-semibold text-sm transition-all pb-1 ${
+        currentView === view
+          ? 'text-[#adc6ff] border-b-2 border-[#adc6ff]'
+          : 'text-[#c2c6d6] hover:text-[#adc6ff]'
+      }`}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <nav className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 md:px-8 h-20 bg-[#0d1322]/85 backdrop-blur-xl border-b border-white/10 shadow-sm">
       <div className="flex items-center gap-8">
@@ -23,26 +38,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, user, o
         </button>
 
         <div className="hidden md:flex gap-6 items-center">
-          <button
-            onClick={() => onNavigate('dashboard')}
-            className={`font-semibold text-sm transition-all pb-1 ${
-              currentView === 'dashboard'
-                ? 'text-[#adc6ff] border-b-2 border-[#adc6ff]'
-                : 'text-[#c2c6d6] hover:text-[#adc6ff]'
-            }`}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => onNavigate('study-plan')}
-            className={`font-semibold text-sm transition-all pb-1 ${
-              currentView === 'study-plan'
-                ? 'text-[#adc6ff] border-b-2 border-[#adc6ff]'
-                : 'text-[#c2c6d6] hover:text-[#adc6ff]'
-            }`}
-          >
-            Study Plan
-          </button>
+          {navItem('dashboard', 'Dashboard')}
+          {navItem('chat', 'Tanya AI')}
+          {navItem('study-plan', 'Study Plan')}
         </div>
       </div>
 

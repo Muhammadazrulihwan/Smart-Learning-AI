@@ -41,6 +41,20 @@ def ask_question(
     return ChatResponse(answer=result["answer"], sources=result["sources"])
 
 
+@router.get("/history/general")
+def get_general_chat_history(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """Riwayat chat mode 'tanya umum' (tidak terikat satu dokumen)."""
+    history = session.exec(
+        select(ChatHistory)
+        .where(ChatHistory.user_id == current_user.id, ChatHistory.document_id.is_(None))
+        .order_by(ChatHistory.created_at)
+    ).all()
+    return history
+
+
 @router.get("/history/{document_id}")
 def get_chat_history(
     document_id: int,

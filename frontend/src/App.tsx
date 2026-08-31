@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DocumentItem } from './types';
 import * as documentsApi from './api/documents';
-import { Navbar } from './components/Navbar';
+import { Navbar, NavView } from './components/Navbar';
 import { DashboardView } from './components/DashboardView';
 import { DocumentDetailView } from './components/DocumentDetailView';
+import { GeneralChatView } from './components/GeneralChatView';
 import { StudyPlanView } from './components/StudyPlanView';
 import { UploadModal } from './components/UploadModal';
 import { AuthScreen } from './components/AuthScreen';
 
-type View = 'dashboard' | 'study-plan' | 'document-detail';
+type View = NavView | 'document-detail';
 
 const AppShell: React.FC = () => {
   const { user, logout } = useAuth();
@@ -43,13 +44,13 @@ const AppShell: React.FC = () => {
     setCurrentView('document-detail');
   };
 
-  if (!user) return null; // dijaga oleh App di bawah, tapi safety check
+  if (!user) return null; // dijaga oleh AppGate, safety check saja
 
   return (
     <div className="min-h-screen bg-[#0d1322] text-[#dde2f8] flex flex-col">
       {currentView !== 'document-detail' && (
         <Navbar
-          currentView={currentView === 'dashboard' ? 'dashboard' : 'study-plan'}
+          currentView={currentView as NavView}
           onNavigate={(view) => setCurrentView(view)}
           user={user}
           onLogout={logout}
@@ -65,6 +66,8 @@ const AppShell: React.FC = () => {
           onNavigateToStudyPlan={() => setCurrentView('study-plan')}
         />
       )}
+
+      {currentView === 'chat' && <GeneralChatView />}
 
       {currentView === 'study-plan' && <StudyPlanView onNavigateHome={() => setCurrentView('dashboard')} />}
 
