@@ -213,6 +213,5 @@ Ringkasan endpoint utama (dokumentasi interaktif lengkap ada di `/docs` backend)
 ## Kontributor
 
 **Muhammad Azrul Ihwan**
-Mahasiswa Informatika, Universitas AMIKOM Yogyakarta
 
 Project ini dibangun sebagai penerapan konsep RAG (Retrieval-Augmented Generation) berdasarkan pengalaman sebagai asisten praktikum yang membantu mahasiswa memahami materi kuliah.
