@@ -24,3 +24,11 @@ export async function getChatHistory(documentId: number): Promise<ChatHistoryEnt
 export async function getGeneralChatHistory(): Promise<ChatHistoryEntry[]> {
   return apiRequest<ChatHistoryEntry[]>('/chat/history/general');
 }
+
+export async function clearChatHistory(documentId: number): Promise<void> {
+  await apiRequest(`/chat/history/${documentId}`, { method: 'DELETE' });
+}
+
+export async function clearGeneralChatHistory(): Promise<void> {
+  await apiRequest('/chat/history/general', { method: 'DELETE' });
+}

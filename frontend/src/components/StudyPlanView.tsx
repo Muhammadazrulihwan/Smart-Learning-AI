@@ -27,9 +27,9 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({ onNavigateHome }) 
   }, []);
 
   return (
-    <main className="flex-grow pt-28 pb-20 px-4 md:px-8 max-w-[1280px] mx-auto w-full flex flex-col">
-      <header className="mb-10">
-        <h1 className="font-extrabold text-3xl md:text-4xl text-[#dde2f8] mb-2">Study Plan Personal</h1>
+    <main className="flex-grow pt-32 md:pt-36 pb-20 px-4 md:px-8 max-w-[1280px] mx-auto w-full flex flex-col">
+      <header className="mb-10 relative z-10">
+        <h1 className="font-extrabold text-3xl md:text-4xl text-[#dde2f8] mb-2 leading-tight">Study Plan Personal</h1>
         <p className="text-[#c2c6d6]">
           Rekomendasi belajar dari AI, disusun otomatis berdasarkan hasil kuis kamu di seluruh dokumen.
         </p>

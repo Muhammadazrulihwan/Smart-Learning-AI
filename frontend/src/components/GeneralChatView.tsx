@@ -13,6 +13,7 @@ export const GeneralChatView: React.FC = () => {
   const [inputQuestion, setInputQuestion] = useState('');
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isAiThinking, setIsAiThinking] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -52,7 +53,7 @@ export const GeneralChatView: React.FC = () => {
     setError(null);
 
     try {
-      const res = await chatApi.askQuestion(text.trim()); // tanpa documentId = cari lintas semua dokumen
+      const res = await chatApi.askQuestion(text.trim());
       const aiMsg: ChatMessage = { localId: `ai-${Date.now()}`, sender: 'ai', text: res.answer, sources: res.sources };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
@@ -66,16 +67,47 @@ export const GeneralChatView: React.FC = () => {
     }
   };
 
+  const handleClearHistory = async () => {
+    if (isClearing || messages.length === 0) return;
+    const confirmed = window.confirm('Hapus semua riwayat percakapan "Tanya AI"? Tindakan ini tidak bisa dibatalkan.');
+    if (!confirmed) return;
+
+    setIsClearing(true);
+    setError(null);
+    try {
+      await chatApi.clearGeneralChatHistory();
+      setMessages([]);
+    } catch {
+      setError('Gagal menghapus riwayat, coba lagi.');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   return (
     <main className="flex-1 w-full max-w-[900px] mx-auto px-4 md:px-6 pt-24 pb-6 flex flex-col h-[calc(100vh-20px)]">
-      <div className="mb-4">
-        <h1 className="font-extrabold text-2xl md:text-3xl text-[#dde2f8] tracking-tight flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#3B82F6] text-3xl">smart_toy</span>
-          <span>Tanya AI</span>
-        </h1>
-        <p className="text-[#c2c6d6] text-sm mt-1">
-          Tanya apa saja — AI otomatis mencari jawaban dari semua dokumen yang sudah kamu upload, tanpa perlu pilih dokumen dulu.
-        </p>
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-extrabold text-2xl md:text-3xl text-[#dde2f8] tracking-tight flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#3B82F6] text-3xl">smart_toy</span>
+            <span>Tanya AI</span>
+          </h1>
+          <p className="text-[#c2c6d6] text-sm mt-1">
+            Tanya apa saja — AI otomatis mencari jawaban dari semua dokumen yang sudah kamu upload, tanpa perlu pilih dokumen dulu.
+          </p>
+        </div>
+
+        {messages.length > 0 && (
+          <button
+            onClick={handleClearHistory}
+            disabled={isClearing}
+            title="Bersihkan riwayat percakapan"
+            className="flex items-center gap-1.5 text-xs font-semibold text-[#94A3B8] hover:text-[#ffb4ab] hover:bg-[#ffb4ab]/10 border border-white/10 hover:border-[#ffb4ab]/30 px-3 py-2 rounded-lg transition-colors flex-shrink-0 disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+            <span className="hidden sm:inline">{isClearing ? 'Menghapus...' : 'Bersihkan Riwayat'}</span>
+          </button>
+        )}
       </div>
 
       <div className="flex-1 glass-panel rounded-2xl border border-white/10 flex flex-col overflow-hidden shadow-2xl">

@@ -1,217 +1,218 @@
-# Setup Project — Fase 0 & Fase 1
+# StudyAI — AI-Powered Smart Learning Companion
 
-Ikuti langkah ini secara urut. Jangan lanjut ke langkah berikutnya kalau langkah sebelumnya belum ✅.
+Platform pembelajaran adaptif berbasis AI yang membantu mahasiswa belajar mandiri dengan personalisasi, tanya-jawab instan berbasis dokumen (RAG), kuis otomatis dengan tingkat kesulitan adaptif, dan rekomendasi belajar personal — dibangun sebagai project pembelajaran penerapan **Retrieval-Augmented Generation (RAG)** di dunia nyata.
 
-## Fase 0 — Persiapan & Setup Environment
-
-### 1. Setup Backend (Python)
-
-```bash
-cd backend
-
-# buat virtual environment
-python -m venv venv
-
-# aktifkan (Windows)
-venv\Scripts\activate
-# aktifkan (Mac/Linux)
-source venv/bin/activate
-
-# install dependencies
-pip install -r requirements.txt
-```
-
-### 2. Setup API Key Gemini
-
-1. Buka https://aistudio.google.com/apikey, buat API key baru (gratis, tanpa kartu kredit)
-2. Copy `.env.example` menjadi `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-3. Buka `.env`, isi `GEMINI_API_KEY` dengan key yang kamu dapat
-4. Isi juga `JWT_SECRET_KEY` dengan string acak (jalankan perintah ini untuk generate):
-   ```bash
-   python -c "import secrets; print(secrets.token_hex(32))"
-   ```
-
-### 3. Validasi Koneksi Gemini API
-
-**Ini wajib jalan dulu sebelum lanjut** — memastikan API key benar dan kuota tersedia:
-
-```bash
-python scripts/test_gemini.py
-```
-
-Kalau muncul ✅ di kedua tes (text generation & embedding), lanjut ke langkah berikutnya. Kalau ❌, cek kembali API key di `.env`.
-
-### 4. Setup Frontend (React)
-
-Di terminal terpisah:
-
-```bash
-cd frontend
-npm create vite@latest . -- --template react
-npm install
-npm run dev
-```
-
-Buka `http://localhost:5173` di browser — pastikan halaman default Vite+React muncul.
-
-### 5. Siapkan Dokumen Uji
-
-Masukkan 3-5 dokumen materi kuliah/praktikum (PDF/DOCX) ke folder:
-```
-data/sample_docs/
-```
-Dokumen ini akan dipakai untuk menguji RAG pipeline mulai Fase 2.
+![Status](https://img.shields.io/badge/status-active-brightgreen)
+![Backend](https://img.shields.io/badge/backend-FastAPI-009688)
+![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20TypeScript-61DAFB)
+![LLM](https://img.shields.io/badge/LLM-Google%20Gemini-4285F4)
+![Vector DB](https://img.shields.io/badge/vector%20db-ChromaDB-orange)
 
 ---
 
-## Fase 1 — Database & Struktur Backend Dasar
+## Daftar Isi
 
-Struktur backend sudah dibuatkan (lihat `backend/app/`):
+- [Latar Belakang](#latar-belakang)
+- [Fitur Utama](#fitur-utama)
+- [Tech Stack](#tech-stack)
+- [Arsitektur](#arsitektur)
+- [Struktur Project](#struktur-project)
+- [Cara Menjalankan](#cara-menjalankan)
+- [Dokumentasi API](#dokumentasi-api)
+- [Roadmap](#roadmap)
+- [Kontributor](#kontributor)
+
+---
+
+## Latar Belakang
+
+Mahasiswa sering menghadapi beberapa masalah saat belajar mandiri:
+
+- Sistem pembelajaran tradisional tidak adaptif terhadap kebutuhan tiap individu
+- Metode pengajaran satu arah gagal mengakomodasi gaya belajar yang berbeda-beda
+- Sulit memahami konsep kompleks tanpa pendampingan langsung
+- Tidak ada klarifikasi instan saat menemui kebingungan di luar jam kuliah/praktikum
+- Platform belajar yang ada jarang memberi feedback performa secara real-time
+
+**StudyAI** dibangun untuk menjawab masalah ini dengan memanfaatkan RAG: mahasiswa upload materi kuliah mereka sendiri, lalu AI membantu memahami, menguji, dan merencanakan proses belajar mereka — berdasarkan konten materi asli, bukan jawaban generik.
+
+---
+
+## Fitur Utama
+
+| Fitur | Deskripsi |
+|---|---|
+| 📄 **Upload & Proses Dokumen** | Upload PDF/DOCX/TXT, otomatis diekstrak, di-chunk, dan di-embed ke vector database |
+| 💬 **Tanya-Jawab per Dokumen** | Chat dengan AI berbasis isi satu dokumen tertentu, lengkap dengan sumber referensi |
+| 🌐 **Tanya AI Lintas Dokumen** | Bertanya bebas tanpa perlu pilih dokumen — AI mencari jawaban dari seluruh materi yang sudah diupload sekaligus |
+| 🧠 **Anti-Halusinasi** | AI hanya menjawab dari isi dokumen; jujur mengaku tidak tahu kalau informasinya tidak tersedia |
+| 📝 **Generate Kuis Otomatis** | Soal pilihan ganda dibuat otomatis dari materi, tersebar ke berbagai topik |
+| 🎯 **Adaptive Difficulty** | Tingkat kesulitan soal menyesuaikan performa mahasiswa di dokumen tersebut sebelumnya |
+| 📊 **Personalized Study Plan** | Rekomendasi topik belajar terurut dari yang paling lemah, berdasarkan riwayat kuis |
+| 🗑️ **Kelola Riwayat Chat** | Riwayat percakapan tersimpan otomatis, dengan opsi untuk membersihkannya kapan saja |
+
+---
+
+## Tech Stack
+
+**Backend**
+- Python + [FastAPI](https://fastapi.tiangolo.com/)
+- [SQLModel](https://sqlmodel.tiangolo.com/) + SQLite (data user, dokumen, kuis, riwayat)
+- [ChromaDB](https://www.trychroma.com/) (vector database, embedded/local)
+- [Google Gemini API](https://ai.google.dev/) — `gemini-2.5-flash` untuk generation, `gemini-embedding-001` untuk embedding
+- JWT (OAuth2PasswordBearer) untuk autentikasi
+
+**Frontend**
+- React + TypeScript (Vite)
+- Tailwind CSS v4
+- Desain: dark mode, glassmorphism + efek glow
+
+---
+
+## Arsitektur
 
 ```
-backend/
-├── main.py                  # entry point FastAPI
-├── app/
-│   ├── database.py          # koneksi SQLite (SQLModel)
-│   ├── models.py            # skema tabel: User, Document, ChatHistory, Quiz, QuizResult, StudyPlan
-│   ├── schemas.py           # request/response schema (Pydantic)
-│   ├── auth_utils.py        # hashing password & JWT
-│   ├── dependencies.py      # dependency get_current_user
-│   └── routers/
-│       └── auth.py          # endpoint register/login/me
+                    ┌─────────────┐
+                    │   Frontend   │  React + TypeScript (Vite)
+                    │   (React)    │  localhost:5173
+                    └──────┬───────┘
+                           │ REST API (JWT Bearer)
+                    ┌──────▼───────┐
+                    │   Backend    │  FastAPI
+                    │  (FastAPI)   │  localhost:8000
+                    └──┬───────┬───┘
+                       │       │
+              ┌────────▼──┐  ┌─▼──────────┐
+              │  SQLite    │  │  ChromaDB   │
+              │ (relasional)│  │ (vector db) │
+              └────────────┘  └─────────────┘
+                       │
+                ┌──────▼───────┐
+                │ Google Gemini │
+                │      API      │
+                └───────────────┘
 ```
 
-### Jalankan Backend
+**Alur RAG (inti sistem):**
+```
+Upload Dokumen → Ekstraksi Teks → Chunking → Embedding → Simpan ke ChromaDB
+                                                                  │
+Pertanyaan User → Embed Query → Retrieval Chunk Relevan ─────────┘
+                                        │
+                     Prompt (context + pertanyaan) → Gemini → Jawaban + Sumber
+```
+
+---
+
+## Struktur Project
+
+```
+.
+├── backend/
+│   ├── app/
+│   │   ├── models.py           # Skema tabel: User, Document, ChatHistory, Quiz, QuizResult, StudyPlan
+│   │   ├── schemas.py          # Request/response schema (Pydantic)
+│   │   ├── database.py         # Koneksi SQLite
+│   │   ├── auth_utils.py       # Hashing password & JWT
+│   │   ├── dependencies.py     # Dependency get_current_user
+│   │   ├── routers/            # Endpoint: auth, documents, chat, quiz, study_plan
+│   │   └── services/           # Logika inti: chunking, embeddings, vector_store, rag, quiz_generation, study_plan
+│   ├── main.py                 # Entry point FastAPI
+│   ├── requirements.txt
+│   └── scripts/test_gemini.py  # Validasi koneksi Gemini API
+│
+├── frontend/
+│   ├── src/
+│   │   ├── api/                # Layer pemanggilan backend (auth, documents, chat, quiz, studyPlan)
+│   │   ├── context/             # AuthContext (state login global)
+│   │   ├── components/          # Navbar, AuthScreen, UploadModal, DashboardView, DocumentDetailView, GeneralChatView, StudyPlanView
+│   │   ├── types.ts              # Tipe data, mengikuti schema backend
+│   │   └── App.tsx
+│   └── package.json
+│
+└── data/sample_docs/            # Contoh materi kuliah untuk testing
+```
+
+---
+
+## Cara Menjalankan
+
+### Prasyarat
+- Python 3.11 atau 3.12 (disarankan; beberapa dependency belum punya prebuilt wheel untuk versi Python terbaru di Windows)
+- Node.js 18+
+- API key Google Gemini (gratis) dari [Google AI Studio](https://aistudio.google.com/apikey)
+
+### Backend
 
 ```bash
 cd backend
+python -m venv venv
+venv\Scripts\activate        # Windows
+# source venv/bin/activate   # Mac/Linux
+
+pip install -r requirements.txt
+
+cp .env.example .env
+# isi GEMINI_API_KEY dan JWT_SECRET_KEY di file .env
+
+python scripts/test_gemini.py   # validasi API key sebelum lanjut
+
 uvicorn main:app --reload
 ```
 
-Buka `http://127.0.0.1:8000/docs` — Swagger UI otomatis muncul dengan endpoint:
-- `POST /auth/register`
-- `POST /auth/login`
-- `GET /auth/me`
+Backend jalan di `http://127.0.0.1:8000`. Dokumentasi API interaktif (Swagger UI) tersedia di `http://127.0.0.1:8000/docs`.
 
-### Tes Alur Auth Lewat Swagger UI
-
-1. Buka `POST /auth/register`, klik "Try it out", isi username/email/password, Execute → harus dapat response 201 dengan data user
-2. Buka `POST /auth/login`, masukkan username & password yang sama → harus dapat `access_token`
-3. Klik tombol "Authorize" di kanan atas Swagger UI, masukkan token yang didapat
-4. Coba `GET /auth/me` → harus mengembalikan data user yang sedang login
-
-Kalau semua ini jalan, database & auth dasar sudah siap. File `app.db` (SQLite) akan otomatis muncul di folder `backend/`.
-
-### Checklist Selesai Fase 0 & 1
-
-- [ ] `python scripts/test_gemini.py` menunjukkan ✅ untuk text generation dan embedding
-- [ ] Frontend Vite+React jalan di `localhost:5173`
-- [ ] Backend FastAPI jalan di `localhost:8000`, `/docs` bisa diakses
-- [ ] Register → Login → `/auth/me` berhasil lewat Swagger UI
-- [ ] File `app.db` sudah muncul otomatis di folder `backend/`
-- [ ] Minimal 3 dokumen materi kuliah/praktikum sudah ada di `data/sample_docs/`
-
-Kalau semua checklist ✅, lanjut ke Fase 2.
-
----
-
-## Fase 2 — RAG Pipeline: Ingestion Dokumen
-
-Struktur baru yang ditambahkan:
-
-```
-backend/app/services/
-├── document_processor.py   # ekstrak teks dari PDF/DOCX/TXT
-├── chunking.py              # pecah teks jadi chunk dengan overlap
-├── embeddings.py            # wrapper Gemini Embedding API
-└── vector_store.py          # wrapper ChromaDB (simpan & cari chunk)
-
-backend/app/routers/
-└── documents.py             # endpoint POST /documents/upload, GET /documents/
-```
-
-### Install dependency baru
+### Frontend
 
 ```bash
-cd backend
-pip install -r requirements.txt
+cd frontend
+npm install
+
+cp .env.example .env   # sesuaikan VITE_API_URL kalau backend jalan di port/URL berbeda
+
+npm run dev
 ```
 
-### Alur ingestion (otomatis saat upload)
-
-```
-Upload file -> extract_text() -> chunk_text() -> embed_texts() -> vector_store.add_chunks()
-                                                                          |
-                                                                    ChromaDB (chroma_data/)
-```
-
-### Tes Lewat Swagger UI
-
-1. Jalankan `uvicorn main:app --reload`, buka `/docs`
-2. Authorize dengan token dari `/auth/login` (lihat Fase 1)
-3. `POST /documents/upload` — upload salah satu dokumen dari `data/sample_docs/`
-4. Response harus `status: "processed"` dengan `chunk_count` > 0
-5. `GET /documents/` — pastikan dokumen muncul di daftar
-
-Kalau `status` malah `"failed"`, cek pesan error di response — biasanya karena PDF hasil scan (tidak ada teks yang bisa diekstrak) atau API key embedding bermasalah.
-
-### Checklist Fase 2
-
-- [ ] Upload dokumen menghasilkan `status: "processed"` dan `chunk_count` masuk akal (bukan 0)
-- [ ] Folder `backend/chroma_data/` otomatis terisi setelah upload
-- [ ] Coba upload dokumen kedua, `GET /documents/` menampilkan keduanya
+Frontend jalan di `http://localhost:5173`.
 
 ---
 
-## Fase 3 — RAG Pipeline: Retrieval & Q&A
+## Dokumentasi API
 
-Struktur baru:
+Ringkasan endpoint utama (dokumentasi interaktif lengkap ada di `/docs` backend):
 
-```
-backend/app/services/
-└── rag.py                   # retrieval + prompt template + generate jawaban
+| Method | Endpoint | Fungsi |
+|---|---|---|
+| POST | `/auth/register` | Daftar akun baru |
+| POST | `/auth/login` | Login (OAuth2 form) |
+| GET | `/auth/me` | Data user yang login |
+| POST | `/documents/upload` | Upload & proses dokumen |
+| GET | `/documents/` | List dokumen milik user |
+| POST | `/chat/ask` | Tanya-jawab RAG (`document_id` opsional — kosongkan untuk cari lintas semua dokumen) |
+| GET/DELETE | `/chat/history/{document_id}` | Riwayat chat per dokumen |
+| GET/DELETE | `/chat/history/general` | Riwayat chat mode lintas dokumen |
+| POST | `/quiz/generate` | Generate soal kuis dari dokumen |
+| GET | `/quiz/document/{document_id}` | List soal tersimpan untuk dokumen |
+| POST | `/quiz/{quiz_id}/submit` | Submit jawaban kuis |
+| GET | `/study-plan/me` | Rekomendasi belajar personal |
 
-backend/app/routers/
-└── chat.py                  # endpoint POST /chat/ask, GET /chat/history/{document_id}
-```
+---
 
-### Alur Q&A
+## Roadmap
 
-```
-Pertanyaan user -> embed_query() -> vector_store.query_chunks() (ambil top-5 relevan)
-                                            |
-                        prompt = SYSTEM_PROMPT + konteks chunk + pertanyaan
-                                            |
-                              Gemini generate_content()
-                                            |
-                              Jawaban + daftar sumber
-```
+- [x] Autentikasi & manajemen dokumen
+- [x] RAG pipeline: ingestion, retrieval, Q&A (per-dokumen & lintas dokumen)
+- [x] Quiz generation dengan adaptive difficulty
+- [x] Personalized study plan
+- [x] Frontend React terintegrasi penuh
+- [ ] Deploy ke cloud (saat ini masih berjalan lokal)
+- [ ] Dashboard analitik progres belajar dari waktu ke waktu
 
-Prompt di `rag.py` (`SYSTEM_PROMPT`) secara eksplisit menginstruksikan model untuk **hanya menjawab dari konteks** dan mengaku terus terang kalau jawabannya tidak ada di dokumen — ini kunci untuk menghindari halusinasi (FR-7 di PRD).
+---
 
-### Tes Lewat Swagger UI
+## Kontributor
 
-1. `POST /chat/ask` dengan body:
-   ```json
-   {
-     "document_id": 1,
-     "question": "Coba tanyakan sesuatu yang ADA di dokumen tersebut"
-   }
-   ```
-   → cek jawabannya relevan dan `sources` menunjuk ke dokumen yang benar
+**Muhammad Azrul Ihwan**
+Mahasiswa Informatika, Universitas AMIKOM Yogyakarta
 
-2. Coba lagi dengan pertanyaan yang **jawabannya TIDAK ADA** di dokumen
-   → pastikan model mengaku tidak tahu, bukan mengarang jawaban (ini tes paling penting!)
-
-3. `GET /chat/history/1` — pastikan riwayat tanya-jawab tersimpan
-
-### Checklist Fase 3
-
-- [ ] Pertanyaan yang jawabannya ADA di dokumen → jawaban relevan + sumber benar
-- [ ] Pertanyaan yang jawabannya TIDAK ADA di dokumen → model mengaku tidak tahu (bukan halusinasi)
-- [ ] Riwayat chat tersimpan dan bisa diambil lewat `/chat/history/{document_id}`
-
-Kalau semua checklist Fase 2 & 3 ✅, fondasi RAG-mu sudah solid — lanjut ke **Fase 4 (Quiz Generation)**, yang akan memakai ulang `vector_store.py` dan pola prompt yang sama.
+Project ini dibangun sebagai penerapan konsep RAG (Retrieval-Augmented Generation) berdasarkan pengalaman sebagai asisten praktikum yang membantu mahasiswa memahami materi kuliah.

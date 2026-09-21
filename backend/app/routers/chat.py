@@ -67,3 +67,34 @@ def get_chat_history(
         .order_by(ChatHistory.created_at)
     ).all()
     return history
+
+
+@router.delete("/history/general")
+def clear_general_chat_history(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """Hapus semua riwayat chat mode 'tanya umum' milik user ini."""
+    entries = session.exec(
+        select(ChatHistory).where(ChatHistory.user_id == current_user.id, ChatHistory.document_id.is_(None))
+    ).all()
+    for entry in entries:
+        session.delete(entry)
+    session.commit()
+    return {"deleted": len(entries)}
+
+
+@router.delete("/history/{document_id}")
+def clear_chat_history(
+    document_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """Hapus semua riwayat chat untuk satu dokumen tertentu milik user ini."""
+    entries = session.exec(
+        select(ChatHistory).where(ChatHistory.user_id == current_user.id, ChatHistory.document_id == document_id)
+    ).all()
+    for entry in entries:
+        session.delete(entry)
+    session.commit()
+    return {"deleted": len(entries)}

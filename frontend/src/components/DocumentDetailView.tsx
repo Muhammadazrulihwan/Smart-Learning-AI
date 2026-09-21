@@ -26,6 +26,7 @@ export const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({ document
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [isClearingHistory, setIsClearingHistory] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   // ==== Quiz state ====
@@ -99,6 +100,23 @@ export const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({ document
       setChatError(msg);
     } finally {
       setIsAiThinking(false);
+    }
+  };
+
+  const handleClearChatHistory = async () => {
+    if (isClearingHistory || messages.length === 0) return;
+    const confirmed = window.confirm('Hapus semua riwayat chat untuk dokumen ini? Tindakan ini tidak bisa dibatalkan.');
+    if (!confirmed) return;
+
+    setIsClearingHistory(true);
+    setChatError(null);
+    try {
+      await chatApi.clearChatHistory(document.id);
+      setMessages([]);
+    } catch {
+      setChatError('Gagal menghapus riwayat, coba lagi.');
+    } finally {
+      setIsClearingHistory(false);
     }
   };
 
@@ -233,25 +251,39 @@ export const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({ document
 
         {/* Right Column: Chat & Quiz */}
         <div className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
-          <div className="flex space-x-2 mb-4 bg-[#242a3a] p-1.5 rounded-xl w-fit self-center lg:self-start border border-white/5 shadow-inner">
-            <button
-              onClick={() => setActiveTab('chat')}
-              className={`px-6 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${
-                activeTab === 'chat' ? 'bg-[#adc6ff]/20 text-[#adc6ff] border border-[#adc6ff]/30' : 'text-[#c2c6d6] hover:text-[#dde2f8] hover:bg-white/5'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">forum</span>
-              <span>Chat Q&A</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('quiz')}
-              className={`px-6 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${
-                activeTab === 'quiz' ? 'bg-[#adc6ff]/20 text-[#adc6ff] border border-[#adc6ff]/30' : 'text-[#c2c6d6] hover:text-[#dde2f8] hover:bg-white/5'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">quiz</span>
-              <span>Kuis</span>
-            </button>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex space-x-2 bg-[#242a3a] p-1.5 rounded-xl w-fit border border-white/5 shadow-inner">
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={`px-6 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${
+                  activeTab === 'chat' ? 'bg-[#adc6ff]/20 text-[#adc6ff] border border-[#adc6ff]/30' : 'text-[#c2c6d6] hover:text-[#dde2f8] hover:bg-white/5'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">forum</span>
+                <span>Chat Q&A</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('quiz')}
+                className={`px-6 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${
+                  activeTab === 'quiz' ? 'bg-[#adc6ff]/20 text-[#adc6ff] border border-[#adc6ff]/30' : 'text-[#c2c6d6] hover:text-[#dde2f8] hover:bg-white/5'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">quiz</span>
+                <span>Kuis</span>
+              </button>
+            </div>
+
+            {activeTab === 'chat' && messages.length > 0 && (
+              <button
+                onClick={handleClearChatHistory}
+                disabled={isClearingHistory}
+                title="Bersihkan riwayat chat"
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#94A3B8] hover:text-[#ffb4ab] hover:bg-[#ffb4ab]/10 border border-white/10 hover:border-[#ffb4ab]/30 px-3 py-2 rounded-lg transition-colors flex-shrink-0 disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+                <span className="hidden sm:inline">{isClearingHistory ? 'Menghapus...' : 'Bersihkan Riwayat'}</span>
+              </button>
+            )}
           </div>
 
           {/* Tab Chat */}
@@ -292,8 +324,7 @@ export const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({ document
                               : 'bg-[#33394a] rounded-tr-sm border border-white/10 text-[#dde2f8]'
                           }`}
                         >
-                          <div className="text-sm leading-relaxed whitespace-pre-line">{msg.text}
-                            </div>
+                          <div className="text-sm leading-relaxed whitespace-pre-line">{msg.text}</div>
                         </div>
                       </div>
                     </div>
